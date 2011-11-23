@@ -112,6 +112,8 @@ protected:
 	m_joints[i] += dtheta;
     }
 
+    void AddToLinkTheta(const double dtheta);
+
     /**
      *@brief Read circular obstacles from input file
      *
@@ -123,6 +125,8 @@ protected:
     std::vector<double> m_lengths;
     std::vector<double> m_positions;
     std::vector<double> m_circles;
+
+    std::vector<double> theta_limits;
 
     double base_x;
     double base_y;

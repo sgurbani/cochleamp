@@ -42,7 +42,9 @@ protected:
     bool m_editRadius;
     bool m_run;
     
-    std::vector<double> m_dthetas;
+    double m_dtheta;
+    double m_dx;
+    double m_dy;
     
 };
 

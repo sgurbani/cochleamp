@@ -33,7 +33,7 @@ public:
  * you need to correctly implement this function
  *
  */
-    void ConfigurationMove(double allLinksDeltaTheta[]);
+    void ConfigurationMove(double &deltaTheta, double &base_deltaX, double &base_deltaY);
     
         
 protected:
