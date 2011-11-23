@@ -95,7 +95,8 @@ void Graphics::HandleEventOnMouseMotion(const double mousePosX, const double mou
 
 void Graphics::HandleEventOnMouseBtnDown(const int whichBtn, const double mousePosX, const double mousePosY)
 {
-    
+	// we don't want this to do anything for now
+   /* 
     m_selectedCircle = -1;
     for(int i = 0; i < m_planner->m_manipSimulator->m_circles.size() && m_selectedCircle == -1; i += 3)
     {
@@ -113,7 +114,7 @@ void Graphics::HandleEventOnMouseBtnDown(const int whichBtn, const double mouseP
 	m_planner->m_manipSimulator->m_circles.push_back(mousePosX);
 	m_planner->m_manipSimulator->m_circles.push_back(mousePosY);
 	m_planner->m_manipSimulator->m_circles.push_back(1.0);
-    }    
+    }*/    
 }
 
 void Graphics::HandleEventOnKeyPress(const int key)
