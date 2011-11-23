@@ -112,10 +112,20 @@ protected:
 	m_joints[i] += dtheta;
     }
 
+    /**
+     *@brief Read circular obstacles from input file
+     *
+     *@param fname name of file with obstacle information
+     */
+    void SetupFromFile(const char fname[]);
+
     std::vector<double> m_joints;
     std::vector<double> m_lengths;
     std::vector<double> m_positions;
     std::vector<double> m_circles;
+
+    double base_x;
+    double base_y;
     
     friend class Graphics;
 };

@@ -2,12 +2,16 @@
 
 ManipSimulator::ManipSimulator(const char fname[])
 {
-    m_positions.push_back(0);
-    m_positions.push_back(0);
+	base_x = -16;
+	base_y = 5;
+    m_positions.push_back(base_x);
+    m_positions.push_back(base_y);
 
-    m_circles.push_back(16);
-    m_circles.push_back(-7);
-    m_circles.push_back(1.0);    
+    m_circles.push_back(8);
+    m_circles.push_back(-3);
+    m_circles.push_back(0.3);    
+
+    SetupFromFile(fname);
 }
 
 ManipSimulator::~ManipSimulator(void)
@@ -90,8 +94,12 @@ void ManipSimulator::FK(void)
 
 	MatrixMultMatrix(Mall, M, Mall);
 
-	m_positions[2 * i + 2] = Mall[2];
-	m_positions[2 * i + 3] = Mall[5];
+	m_positions[2 * i + 2] = Mall[2] + base_x;
+	m_positions[2 * i + 3] = Mall[5] + base_y;;
     }
 }
 
+void ManipSimulator::SetupFromFile(const char fname[])
+{
+	//file with obstacles (x y r)
+}
