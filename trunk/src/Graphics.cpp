@@ -43,7 +43,7 @@ void Graphics::MainLoop(void)
     static char  *args = (char*)"args";
     glutInit(&argc, &args);    
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);    
-    glutInitWindowSize(1000, 600);
+    glutInitWindowSize(900, 450);
     glutInitWindowPosition(0, 0); 
     glutCreateWindow("Planner");	   	
 
@@ -196,7 +196,7 @@ void Graphics::CallbackEventOnDisplay(void)
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-22, 22, -14, 14, -1.0, 1.0);
+	glOrtho(-12, 12, -6, 6, -1.0, 1.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();	    
 	
