@@ -3,7 +3,7 @@
 ManipSimulator::ManipSimulator(const char fname[])
 {
 	base_x = -8;
-	base_y = 2;
+	base_y = 1.6;
     m_positions.push_back(base_x);
     m_positions.push_back(base_y);
 
@@ -33,6 +33,32 @@ void ManipSimulator::AddLink(const double length)
     m_joints.push_back(0);
     m_lengths.push_back(length);
     m_positions.resize(m_positions.size() + 2);	
+}
+
+void ManipSimulator::AddToLinkTheta(double dtheta)
+{
+	dtheta = -dtheta;
+	if(dtheta > 0) {
+		for(int i = this->GetNrLinks()-1; i > -1; i--) {
+			if(m_joints[i] - dtheta < theta_limits[i]) {
+				dtheta -= theta_limits[i]-m_joints[i];
+				m_joints[i] = theta_limits[i];
+			} else {
+				m_joints[i] -= dtheta;
+				break;
+			}
+		}
+	} else if(dtheta < 0) {
+		for(int i = 0; i < this->GetNrLinks(); i++) {
+			if(m_joints[i] - dtheta > 0) {
+				dtheta -= m_joints[i];
+				m_joints[i] = 0;
+			} else {
+				m_joints[i] -= dtheta;
+				break;
+			}
+		}
+	}
 }
 
 Point ManipSimulator::ClosestPointOnObstacle(const int i, const double x, const double y)
@@ -84,6 +110,8 @@ void ManipSimulator::FK(void)
     Mall[0] = Mall[4] = 1;
     Mall[1] = Mall[2] = Mall[3] = Mall[5] = 0;
     
+    m_positions[0] = base_x;
+    m_positions[1] = base_y;
     for(int i = 0; i < n; ++i)
     {
 	const double ctheta = cos(GetLinkTheta(i));

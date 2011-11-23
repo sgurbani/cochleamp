@@ -15,10 +15,13 @@ Graphics::Graphics(const char fname[], const int nrLinks, const double linkLengt
     ManipSimulator* m_sim = new ManipSimulator(fname);
     m_planner                = new ManipPlanner(m_sim);
 
+    m_planner->m_manipSimulator->theta_limits.resize(nrLinks);
     for(int i = 0; i < nrLinks; ++i)
+    {
 	m_planner->m_manipSimulator->AddLink(linkLength);
+        m_planner->m_manipSimulator->theta_limits[i] = -(2*M_PI)/nrLinks + ((nrLinks-i+0.0)/nrLinks*(12))/180*M_PI; //backoff varies from 12 to 0
+    }
     m_planner->m_manipSimulator->FK();
-    m_dthetas.resize(nrLinks);
 
     m_selectedCircle = -1;
     m_editRadius     = false;
@@ -64,9 +67,10 @@ void Graphics::HandleEventOnTimer(void)
 {
     if(m_run && !m_planner->m_manipSimulator->HasRobotReachedGoal())
     {
-	m_planner->ConfigurationMove(&(m_dthetas[0]));
-	for(int i = 0; i < m_planner->m_manipSimulator->GetNrLinks(); ++i)
-	    m_planner->m_manipSimulator->AddToLinkTheta(i, m_dthetas[i]);
+	m_planner->ConfigurationMove(m_dtheta, m_dx, m_dy);
+	m_planner->m_manipSimulator->base_x += m_dx;
+	m_planner->m_manipSimulator->base_y += m_dy;
+        m_planner->m_manipSimulator->AddToLinkTheta(m_dtheta);
 	m_planner->m_manipSimulator->FK();
     }
 } 
