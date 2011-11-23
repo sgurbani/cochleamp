@@ -2,14 +2,14 @@
 
 ManipSimulator::ManipSimulator(const char fname[])
 {
-	base_x = -16;
+	base_x = -8;
 	base_y = 5;
     m_positions.push_back(base_x);
     m_positions.push_back(base_y);
 
-    m_circles.push_back(8);
-    m_circles.push_back(-3);
-    m_circles.push_back(0.3);    
+    m_circles.push_back(5);
+    m_circles.push_back(1.6);
+    m_circles.push_back(0.2);    
 
     SetupFromFile(fname);
 }
@@ -102,4 +102,30 @@ void ManipSimulator::FK(void)
 void ManipSimulator::SetupFromFile(const char fname[])
 {
 	//file with obstacles (x y r)
+	FILE *in = fopen(fname, "r");
+	if(in)
+	{
+		int nrObstacles;
+		double x; double y; double r;
+
+		if(fscanf(in, "%d", &nrObstacles) != 1)
+		{
+			printf("error: expecting number of obstacles\n");
+			fclose(in);
+			return;
+		}
+
+		for(int i=0; i<nrObstacles; i++)
+		{
+			if(fscanf(in, "%lf %lf %lf", &x, &y, &r) != 3)
+			{
+				printf("invalid obstacle definition, expecting x y r\n");
+				fclose(in);
+				return;
+			}
+			m_circles.push_back(x);
+			m_circles.push_back(y);
+			m_circles.push_back(r);
+		}
+	}
 }
