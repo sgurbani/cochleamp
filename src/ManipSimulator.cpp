@@ -3,12 +3,12 @@
 ManipSimulator::ManipSimulator(const char fname[])
 {
 	base_x = -8;
-	base_y = 5;
+	base_y = 2;
     m_positions.push_back(base_x);
     m_positions.push_back(base_y);
 
     m_circles.push_back(5);
-    m_circles.push_back(1.6);
+    m_circles.push_back(0.6);
     m_circles.push_back(0.2);    
 
     SetupFromFile(fname);
