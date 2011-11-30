@@ -1,11 +1,18 @@
 #include "ManipPlanner.hpp"
+using namespace std;
 
 ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
 {
     m_manipSimulator = manipSimulator;   
     
+    //initialize maxmimum imaging depth of our OCT probe
+    MAX_OCT_DEPTH = 0.2;
+    
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
+    
+    //intialize other vars
+    sensedPoints.clear();
 }
 
 ManipPlanner::~ManipPlanner(void)
@@ -21,7 +28,11 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
 	// we are assuming the orientation of insertion is already optimal; baseDeltaY will probably never be used here
 	// simulator keeps track of restriction on order of joint movement and joint limits
 	// not exactly the same as retracting a stylus but a simplified(?) equivalent
+    ScanOCT();
 	deltaTheta = -0.01;
+    baseDeltaX = 0.01;
+    
+    cout << sensedPoints.size() << endl;
    
 }
 
@@ -79,4 +90,59 @@ Point ManipPlanner::GetElectrodeTip(void)
 bool ManipPlanner::CanLinkBend(int i)
 {
     return retractionCoeff >= m_manipSimulator->GetNrLinks() - i;
+}
+
+/**
+ * Returns the Euclidean distance between points a and b
+ */
+double ManipPlanner::DistanceBetweenPoints(Point a, Point b)
+{
+    return sqrt(pow(a.m_x-b.m_x,2) + pow(a.m_y-b.m_y,2));
+    
+}
+
+/**
+* This method mimics an "OCT sweep" around the electrode. In effect,
+* it will provide depth and angle information for all objects that can
+* be sensed from the electrode tip (where our imaging probe is located).
+* It returns an OCTData struct consisting of all the points on obstacles
+* that can be detected.
+*/
+OCTData ManipPlanner::ScanOCT(void)
+{
+    //initialize vars
+    OCTData data;
+    data.NrScans = 0;
+    sensedPoints.clear();
+    
+    //get the electrode tip position
+    Point e = GetElectrodeTip();
+    double ex = e.m_x;
+    double ey = e.m_y;
+    
+    //since the cochlea tissue is made up of lots and lots of tiny 
+    //circular obstacles, we can basically get the closest point to all of
+    //them, ignoring any whose closest point is greater than MAX_OCT_DEPTH
+    int NrObs = m_manipSimulator->GetNrObstacles();
+    
+    for(int i=0;i<NrObs;i++)
+    {
+        //find the closest point to this obstacle, incorporating OCT depth
+        Point p = m_manipSimulator->ClosestPointOnObstacleAtMaxDist(i, ex, ey, MAX_OCT_DEPTH);
+        
+        //check to see if it's within our sensing depth
+        if(p.m_x < HUGE_VAL && p.m_y < HUGE_VAL)
+        {
+            //we're good!
+            //add it to the OCTData
+            data.NrScans++;
+            data.depth.push_back(DistanceBetweenPoints(e, p));
+            data.angle.push_back(GetAngleToPoint(p));
+            
+            //add to sensedPoints for debugging
+            sensedPoints.push_back(i);
+        }
+    }
+    
+    return data;
 }

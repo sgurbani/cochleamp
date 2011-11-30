@@ -3,8 +3,18 @@
 
 #include "ManipSimulator.hpp"
 #include <math.h>
+#include <iostream>
 
 #define _USE_MATH_DEFINES
+
+using namespace std;
+
+struct OCTData
+{
+    int NrScans;
+    vector<double> depth;
+    vector<double> angle;    
+};
 
 class ManipPlanner
 {
@@ -46,7 +56,14 @@ protected:
     double GetAngleToPoint(Point p);
     Point GetElectrodeTip(void);
     bool CanLinkBend(int i);
+    
+    double DistanceBetweenPoints(Point, Point);
+    
+    OCTData ScanOCT(void);
 
+    vector<int> sensedPoints;
+    double MAX_OCT_DEPTH;
+    
     friend class Graphics;
 };
 
