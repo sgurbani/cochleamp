@@ -31,9 +31,19 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
  */
 double ManipPlanner::GetAngleToPoint(Point p)
 {
+    //get the electrode tip
+    Point e = GetElectrodeTip();
     
-    //to compile
-    return 0.0;
+    //calculate the angle between e and p using atan2
+    double theta = atan2(p.m_y-e.m_y, p.m_x-e.m_x);
+    
+    //since atan2 returns between (-PI, PI)...if theta < 0, then add 2*PI
+    if(theta < 0)
+    {
+        theta += 2*M_PI;
+    }
+    
+    return theta;
     
 }
 

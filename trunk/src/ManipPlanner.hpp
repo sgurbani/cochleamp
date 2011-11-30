@@ -2,6 +2,9 @@
 #define MANIP_PLANNER_HPP_
 
 #include "ManipSimulator.hpp"
+#include <math.h>
+
+#define _USE_MATH_DEFINES
 
 class ManipPlanner
 {
