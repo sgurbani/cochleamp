@@ -6,7 +6,7 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     m_manipSimulator = manipSimulator;   
     
     //initialize maxmimum imaging depth of our OCT probe
-    MAX_OCT_DEPTH = 0.2;
+    MAX_OCT_DEPTH = 3;
     
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
@@ -33,7 +33,6 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
     baseDeltaX = 0.01;
     
     cout << sensedPoints.size() << endl;
-   
 }
 
 
@@ -119,7 +118,7 @@ OCTData ManipPlanner::ScanOCT(void)
     Point e = GetElectrodeTip();
     double ex = e.m_x;
     double ey = e.m_y;
-    
+        
     //since the cochlea tissue is made up of lots and lots of tiny 
     //circular obstacles, we can basically get the closest point to all of
     //them, ignoring any whose closest point is greater than MAX_OCT_DEPTH
@@ -131,7 +130,7 @@ OCTData ManipPlanner::ScanOCT(void)
         Point p = m_manipSimulator->ClosestPointOnObstacleAtMaxDist(i, ex, ey, MAX_OCT_DEPTH);
         
         //check to see if it's within our sensing depth
-        if(p.m_x < HUGE_VAL && p.m_y < HUGE_VAL)
+        if(p.m_x < 0.5*HUGE_VAL && p.m_y < 0.5*HUGE_VAL)
         {
             //we're good!
             //add it to the OCTData
