@@ -41,9 +41,11 @@ public:
         
 protected:
     ManipSimulator  *m_manipSimulator;
+    int retractionCoeff;
     
     double GetAngleToPoint(Point p);
     Point GetElectrodeTip(void);
+    bool CanLinkBend(int i);
 
     friend class Graphics;
 };

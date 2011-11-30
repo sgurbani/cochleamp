@@ -3,6 +3,9 @@
 ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
 {
     m_manipSimulator = manipSimulator;   
+    
+    //initialize retraction coefficient to 0 (ie: stylus fully inserted)
+    retractionCoeff = 0;
 }
 
 ManipPlanner::~ManipPlanner(void)
@@ -65,4 +68,15 @@ Point ManipPlanner::GetElectrodeTip(void)
     p.m_y = y;
     
     return p;
+}
+
+/**
+ * Determines whether the i-th link is able to bend based on the
+ * value of the retraction coefficient.
+ *
+ * Return true if retractionCoeff >= NrLinks - i
+ */
+bool ManipPlanner::CanLinkBend(int i)
+{
+    return retractionCoeff >= m_manipSimulator->GetNrLinks() - i;
 }
