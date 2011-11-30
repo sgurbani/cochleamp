@@ -61,6 +61,32 @@ void ManipSimulator::AddToLinkTheta(double dtheta)
 	}
 }
 
+Point ManipSimulator::ClosestPointOnObstacleAtMaxDist(const int i, const double x, const double y, const double dist)
+{
+    const double cx = GetObstacleCenterX(i);
+    const double cy = GetObstacleCenterY(i);
+    const double r  = GetObstacleRadius(i);
+    const double d  = sqrt((cx - x) * (cx - x) + (cy - y) * (cy - y));
+    
+    Point p;
+    
+    //if the closest point is closer than dist, we're good
+    if(d <= dist)
+    {
+        p.m_x = cx + r * (x - cx) / d;
+        p.m_y = cy + r * (y - cy) / d;
+    }
+    else
+    {
+        //otherwise, set the coordinates to HUGE_VAL
+        p.m_x = HUGE_VAL;
+        p.m_y = HUGE_VAL;
+    }
+    
+    return p;
+    
+}
+
 Point ManipSimulator::ClosestPointOnObstacle(const int i, const double x, const double y)
 {
     const double cx = GetObstacleCenterX(i);
