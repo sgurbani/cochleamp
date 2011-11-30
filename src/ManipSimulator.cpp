@@ -153,6 +153,7 @@ void ManipSimulator::FK(void)
     }
 }
 
+
 void ManipSimulator::SetupFromFile(const char fname[])
 {
 	//file with obstacles (x y r)

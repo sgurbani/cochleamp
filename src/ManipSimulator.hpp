@@ -68,7 +68,7 @@ public:
     }
 
     bool HasRobotReachedGoal(void) const;
-    
+        
 protected:
 
     double GetObstacleCenterX(const int i) const
