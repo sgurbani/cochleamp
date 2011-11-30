@@ -38,6 +38,9 @@ public:
         
 protected:
     ManipSimulator  *m_manipSimulator;
+    
+    double GetAngleToPoint(Point p);
+    Point GetElectrodeTip(void);
 
     friend class Graphics;
 };
