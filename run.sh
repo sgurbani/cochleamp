@@ -1,1 +1,1 @@
-bin/Planner bin/obstacles.txt 8 1.5
+bin/Planner bin/cochlea_male_A943.txt 8 1.5
