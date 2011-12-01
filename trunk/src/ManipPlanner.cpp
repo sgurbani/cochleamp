@@ -6,7 +6,7 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     m_manipSimulator = manipSimulator;   
     
     //initialize maxmimum imaging depth of our OCT probe
-    MAX_OCT_DEPTH = 3;
+    MAX_OCT_DEPTH = 1;
     
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
@@ -69,8 +69,8 @@ Point ManipPlanner::GetElectrodeTip(void)
     int i = m_manipSimulator->GetNrLinks();
     
     //get the x and y positions of the (i-1)-th link
-    double x = m_manipSimulator->GetLinkEndX(i - 1);
-    double y = m_manipSimulator->GetLinkEndX(i - 1);
+    double x = m_manipSimulator->GetLinkEndX(i-1);
+    double y = m_manipSimulator->GetLinkEndY(i-1);
     
     //and package them into a Point and return
     Point p;
