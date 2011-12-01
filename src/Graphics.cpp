@@ -170,6 +170,12 @@ void Graphics::HandleEventOnDisplay(void)
 		     m_planner->m_manipSimulator->GetObstacleRadius(i));
     
     
+    //draw the electrode tip
+    glColor3f(1, 1, 0);
+    DrawCircle2D(m_planner->GetElectrodeTip().m_x, 
+                 m_planner->GetElectrodeTip().m_y, 
+                 3*m_planner->m_manipSimulator->GetObstacleRadius(100));
+    
     //display the currently sensed OCT points
     glColor3f(1,0,0);
     for(int j=0; j<m_planner->sensedPoints.size(); j++)
