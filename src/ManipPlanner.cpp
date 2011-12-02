@@ -146,7 +146,7 @@ OCTData ManipPlanner::ScanOCT(void)
             
             cout << "angle: " << abs(phi) << endl;
             
-            if(abs(phi) < ANGLE_BANDWIDTH || fabs(phi-0.5*M_PI) < ANGLE_BANDWIDTH || fabs(phi+0.5*M_PI) < ANGLE_BANDWIDTH)  //it's directy in front of us OR orthogonal to our link
+            if(fabs(phi) < ANGLE_BANDWIDTH || fabs(phi-0.5*M_PI) < ANGLE_BANDWIDTH || fabs(phi+0.5*M_PI) < ANGLE_BANDWIDTH)  //it's directy in front of us OR orthogonal to our link
             {
                 cout << "IN HERE" << endl;
                 //add it to the OCTData
