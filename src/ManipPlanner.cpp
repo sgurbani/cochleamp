@@ -9,7 +9,7 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     MAX_OCT_DEPTH = 1;
     
     //initialize angle bandwidth of OCT probe
-    ANGLE_BANDWIDTH = 1/20 * M_PI;
+    ANGLE_BANDWIDTH = 1.0/20 * M_PI;       //have a sensitivity of +/- 1 deg
     
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
@@ -144,8 +144,11 @@ OCTData ManipPlanner::ScanOCT(void)
             //angle w.r.t. our link
             double phi = GetAngleToPoint(p) - GetAngleFromXAxis(m_manipSimulator->GetNrLinks()-1);
             
-            if(abs(phi) < ANGLE_BANDWIDTH || abs(phi+0.5*M_PI) < ANGLE_BANDWIDTH || abs(phi-0.5*M_PI))  //it's directy in front of us OR orthogonal to our link
+            cout << "angle: " << abs(phi) << endl;
+            
+            if(abs(phi) < ANGLE_BANDWIDTH || fabs(phi-0.5*M_PI) < ANGLE_BANDWIDTH)  //it's directy in front of us OR orthogonal to our link
             {
+                cout << "IN HERE" << endl;
                 //add it to the OCTData
                 data.NrScans++;
                 data.depth.push_back(DistanceBetweenPoints(e, p));
@@ -171,17 +174,15 @@ double ManipPlanner::GetAngleFromXAxis(const int j)
     //sum over all joint angles
     for(int i=0; i<=j; i++)
     {
-        angle -= m_manipSimulator->GetLinkTheta(i);
+        angle += m_manipSimulator->GetLinkTheta(i);
     }
     
-    //if angle is negative, add 2*PI
-    if(angle < 0)
-        angle += 2*M_PI;
+    //angle will always be negative
     
     //truncate to [0, 2+PI]
-    while(angle > 2*M_PI)
+    while(angle < 0)
     {
-        angle -= 2*M_PI;
+        angle += 2*M_PI;
     }
     
     return angle;
