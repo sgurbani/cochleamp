@@ -6,7 +6,7 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     m_manipSimulator = manipSimulator;   
     
     //initialize maxmimum imaging depth of our OCT probe
-    MAX_OCT_DEPTH = 1;
+    MAX_OCT_DEPTH = 1.5;
     
     //initialize angle bandwidth of OCT probe
     ANGLE_BANDWIDTH = 1.0/36 * M_PI;       //have a sensitivity of +/- 5 deg
@@ -65,15 +65,15 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
             baseDeltaY = 0;
             break;
 
-        case 1:
+       // case 1:
             //AT STAGE 1, WE HAVE SENSED TISSUE IN FRONT OF US, BUT HAVE NOT
             //STARTED TO BEND THE PROBE YET.
             
-            break;
+        //    break;
         
         default:
-            deltaTheta = -0.01;
-            baseDeltaX = 0.01;
+            deltaTheta = m_manipSimulator->GetLinkThetaLimit(0) / 75;
+            baseDeltaX = 0.015;
             break;
     }
 }
