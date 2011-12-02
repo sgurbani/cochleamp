@@ -68,6 +68,11 @@ public:
     }
 
     bool HasRobotReachedGoal(void) const;
+
+    double GetLinkTheta(const int i) const
+    {
+	return m_joints[i];
+    }
         
 protected:
 
@@ -84,11 +89,6 @@ protected:
     double GetObstacleRadius(const int i) const
     {
 	return m_circles[3 * i + 5];
-    }
-
-    double GetLinkTheta(const int i) const
-    {
-	return m_joints[i];
     }
 
     double GetLinkLength(const int i) const
