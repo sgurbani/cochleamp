@@ -9,7 +9,7 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     MAX_OCT_DEPTH = 1;
     
     //initialize angle bandwidth of OCT probe
-    ANGLE_BANDWIDTH = 1.0/20 * M_PI;       //have a sensitivity of +/- 1 deg
+    ANGLE_BANDWIDTH = 1.0/180 * M_PI;       //have a sensitivity of +/- 1 deg
     
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
@@ -146,7 +146,7 @@ OCTData ManipPlanner::ScanOCT(void)
             
             cout << "angle: " << abs(phi) << endl;
             
-            if(abs(phi) < ANGLE_BANDWIDTH || fabs(phi-0.5*M_PI) < ANGLE_BANDWIDTH)  //it's directy in front of us OR orthogonal to our link
+            if(abs(phi) < ANGLE_BANDWIDTH || fabs(phi-0.5*M_PI) < ANGLE_BANDWIDTH || fabs(phi+0.5*M_PI) < ANGLE_BANDWIDTH)  //it's directy in front of us OR orthogonal to our link
             {
                 cout << "IN HERE" << endl;
                 //add it to the OCTData
