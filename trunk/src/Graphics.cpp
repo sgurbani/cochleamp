@@ -181,7 +181,6 @@ void Graphics::HandleEventOnDisplay(void)
     for(int j=0; j<m_planner->sensedPoints.size(); j++)
     {
         int i = m_planner->sensedPoints[j];
-        cout << "obstacle #:" << i << endl;
         DrawCircle2D(m_planner->m_manipSimulator->GetObstacleCenterX(i), 
                      m_planner->m_manipSimulator->GetObstacleCenterY(i), 
                      2*m_planner->m_manipSimulator->GetObstacleRadius(i));
