@@ -66,6 +66,11 @@ public:
     {
 	return GetLinkStartY(i + 1);
     }
+    
+    double GetLinkTheta(const int i) const
+    {
+        return m_joints[i];
+    }
 
     bool HasRobotReachedGoal(void) const;
 

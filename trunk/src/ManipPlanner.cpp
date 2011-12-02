@@ -179,7 +179,10 @@ double ManipPlanner::GetAngleFromXAxis(const int j)
         angle += 2*M_PI;
     
     //truncate to [0, 2+PI]
-    angle = angle % (2*M_PI);
+    while(angle > 2*M_PI)
+    {
+        angle -= 2*M_PI;
+    }
     
     return angle;
 }
