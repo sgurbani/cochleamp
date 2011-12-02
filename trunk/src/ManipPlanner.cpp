@@ -9,7 +9,7 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     MAX_OCT_DEPTH = 1;
     
     //initialize angle bandwidth of OCT probe
-    ANGLE_BANDWIDTH = 1.0/180 * M_PI;       //have a sensitivity of +/- 1 deg
+    ANGLE_BANDWIDTH = 1.0/360 * M_PI;       //have a sensitivity of +/- 0.5 deg
     
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
