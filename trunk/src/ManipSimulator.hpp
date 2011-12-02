@@ -72,6 +72,11 @@ public:
         return m_joints[i];
     }
 
+    double GetLinkThetaLimit(const int i) const
+    {
+        return theta_limits[i];
+    }
+
     bool HasRobotReachedGoal(void) const;
 
 protected:
