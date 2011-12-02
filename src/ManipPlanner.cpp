@@ -6,10 +6,10 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     m_manipSimulator = manipSimulator;   
     
     //initialize maxmimum imaging depth of our OCT probe
-    MAX_OCT_DEPTH = 1.5;
+    MAX_OCT_DEPTH = 1;
     
     //initialize angle bandwidth of OCT probe
-    ANGLE_BANDWIDTH = 1.0/90 * M_PI;       //have a sensitivity of +/- 0.5 deg
+    ANGLE_BANDWIDTH = 1.0/36 * M_PI;       //have a sensitivity of +/- 5 deg
     
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
@@ -179,7 +179,7 @@ OCTData ManipPlanner::ScanOCT(void)
             
             //now, check to see what angle it makes with our link
             //we can only use it if is in front of us or directly orthogonal to
-            //our link (within a margin ANGLE_BANDWIDTH ~= 1/20*PI).
+            //our link (within a margin ANGLE_BANDWIDTH).
             
             //angle w.r.t. our link
             double phi = GetAngleToPoint(p) - GetAngleFromXAxis(m_manipSimulator->GetNrLinks()-1);
