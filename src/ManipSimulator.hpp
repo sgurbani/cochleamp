@@ -74,11 +74,6 @@ public:
 
     bool HasRobotReachedGoal(void) const;
 
-    double GetLinkTheta(const int i) const
-    {
-	return m_joints[i];
-    }
-        
 protected:
 
     double GetObstacleCenterX(const int i) const
