@@ -8,6 +8,9 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     //initialize maxmimum imaging depth of our OCT probe
     MAX_OCT_DEPTH = 1;
     
+    //initialize angle bandwidth of OCT probe
+    ANGLE_BANDWIDTH = 1/20 * M_PI;
+    
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
     
@@ -133,15 +136,50 @@ OCTData ManipPlanner::ScanOCT(void)
         if(p.m_x < 0.5*HUGE_VAL && p.m_y < 0.5*HUGE_VAL)
         {
             //we're good!
-            //add it to the OCTData
-            data.NrScans++;
-            data.depth.push_back(DistanceBetweenPoints(e, p));
-            data.angle.push_back(GetAngleToPoint(p));
             
-            //add to sensedPoints for debugging
-            sensedPoints.push_back(i);
+            //now, check to see what angle it makes with our link
+            //we can only use it if is in front of us or directly orthogonal to
+            //our link (within a margin ANGLE_BANDWIDTH ~= 1/20*PI).
+            
+            //angle w.r.t. our link
+            double phi = GetAngleToPoint(p) - GetAngleFromXAxis(m_manipSimulator->GetNrLinks()-1);
+            
+            if(abs(phi) < ANGLE_BANDWIDTH || abs(phi+0.5*M_PI) < ANGLE_BANDWIDTH || abs(phi-0.5*M_PI))  //it's directy in front of us OR orthogonal to our link
+            {
+                //add it to the OCTData
+                data.NrScans++;
+                data.depth.push_back(DistanceBetweenPoints(e, p));
+                data.angle.push_back(GetAngleToPoint(p));
+                
+                //add to sensedPoints for debugging
+                sensedPoints.push_back(i);
+            }
         }
     }
     
     return data;
+}
+
+/**
+ * This function returns the angle of joint i with respect to the horizontal axis.
+ * It returns a value between 0 and 2 PI.
+*/
+double ManipPlanner::GetAngleFromXAxis(const int j)
+{
+    double angle = 0;   //will hold the sum of all joint angles up to i
+    
+    //sum over all joint angles
+    for(int i=0; i<=j; i++)
+    {
+        angle -= m_manipSimulator->GetLinkTheta(i);
+    }
+    
+    //if angle is negative, add 2*PI
+    if(angle < 0)
+        angle += 2*M_PI;
+    
+    //truncate to [0, 2+PI]
+    angle = angle % (2*M_PI);
+    
+    return angle;
 }

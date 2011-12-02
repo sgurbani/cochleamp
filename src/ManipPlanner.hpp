@@ -59,10 +59,13 @@ protected:
     
     double DistanceBetweenPoints(Point, Point);
     
+    double GetAngleFromXAxis(const int i);
+    
     OCTData ScanOCT(void);
 
     vector<int> sensedPoints;
     double MAX_OCT_DEPTH;
+    double ANGLE_BANDWIDTH;
     
     friend class Graphics;
 };
