@@ -19,7 +19,7 @@ Graphics::Graphics(const char fname[], const int nrLinks, const double linkLengt
     for(int i = 0; i < nrLinks; ++i)
     {
 	m_planner->m_manipSimulator->AddLink(linkLength);
-        m_planner->m_manipSimulator->theta_limits[i] = -(2*M_PI)/nrLinks + ((nrLinks-i+0.0)/nrLinks*(12))/180*M_PI; //backoff varies from 12 to 0
+        m_planner->m_manipSimulator->theta_limits[i] = -(4.0/3*M_PI)/nrLinks + ((nrLinks-i+0.0)/nrLinks*(11))/180*M_PI; //backoff varies from 10 to 0
     }
     m_planner->m_manipSimulator->FK();
 
