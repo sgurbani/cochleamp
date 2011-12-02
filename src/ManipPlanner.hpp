@@ -67,6 +67,8 @@ protected:
     double MAX_OCT_DEPTH;
     double ANGLE_BANDWIDTH;
     
+    int stage;
+    
     friend class Graphics;
 };
 

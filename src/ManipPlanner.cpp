@@ -6,13 +6,16 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     m_manipSimulator = manipSimulator;   
     
     //initialize maxmimum imaging depth of our OCT probe
-    MAX_OCT_DEPTH = 1;
+    MAX_OCT_DEPTH = 2;
     
     //initialize angle bandwidth of OCT probe
-    ANGLE_BANDWIDTH = 1.0/360 * M_PI;       //have a sensitivity of +/- 0.5 deg
+    ANGLE_BANDWIDTH = 1.0/90 * M_PI;       //have a sensitivity of +/- 0.5 deg
     
     //initialize retraction coefficient to 0 (ie: stylus fully inserted)
     retractionCoeff = 0;
+    
+    //initialize our algorithm to stage 0
+    stage = 0;
     
     //intialize other vars
     sensedPoints.clear();
@@ -25,15 +28,39 @@ ManipPlanner::~ManipPlanner(void)
 
 void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, double &baseDeltaY)
 {
+    //always get OCT data
+    OCTData oct = ScanOCT();
 
-  // add your code here!!
-	// final position of base_x, base_y: 5.6, 1.6
-	// we are assuming the orientation of insertion is already optimal; baseDeltaY will probably never be used here
-	// simulator keeps track of restriction on order of joint movement and joint limits
-	// not exactly the same as retracting a stylus but a simplified(?) equivalent
-    ScanOCT();
-	deltaTheta = -0.01;
-    baseDeltaX = 0.01;
+    //IF WE'RE IN STAGE 0, JUST MOVE FORWARD UNTIL WE SENSE SOMETHING IN FRONT OF US
+    if(stage == 0)
+    {
+        //check to see if something in front of us
+        for(int i=0; i<oct.NrScans; i++)
+        {
+            double a = oct.angle[i];
+            if(a == 0)
+            {
+                //uh oh, something in front of us
+                //switch stage and wait until next iteration
+                stage = 1;
+                deltaTheta = 0;
+                baseDeltaX = 0;
+                baseDeltaY = 0;
+                return;
+            }
+        }
+        
+        //okay nothing in front of us
+        //keep moving in the +x direction
+        deltaTheta = 0;
+        baseDeltaX = 0.01;
+        baseDeltaY = 0;
+    }
+    else
+    {
+        deltaTheta = -0.01;
+        baseDeltaX = 0.01;
+    }
     
     cout << sensedPoints.size() << endl;
 }
@@ -152,7 +179,15 @@ OCTData ManipPlanner::ScanOCT(void)
                 //add it to the OCTData
                 data.NrScans++;
                 data.depth.push_back(DistanceBetweenPoints(e, p));
-                data.angle.push_back(GetAngleToPoint(p));
+                
+                //if we're in "front", push a 0 as the angle
+                //if we're to the side, push -1 for "left", +1 for "right"
+                if(fabs(phi) < ANGLE_BANDWIDTH)
+                    data.angle.push_back(0);
+                else if(fabs(phi-0.5*M_PI) < ANGLE_BANDWIDTH)
+                    data.angle.push_back(-1);
+                else
+                    data.angle.push_back(1);
                 
                 //add to sensedPoints for debugging
                 sensedPoints.push_back(i);
