@@ -86,7 +86,7 @@ public:
     {
 	    //checks which link is currently active for bending; returns -1 if fully bent
 	    for(int i=0; i<this->GetNrLinks(); i++)
-		    if(this->GetLinkTheta(i) < this->GetLinkThetaLimit(i))
+		    if(this->GetLinkTheta(i) > this->GetLinkThetaLimit(i))
 			    return i;
 	    return -1;
     }

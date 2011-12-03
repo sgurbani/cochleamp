@@ -3,7 +3,7 @@
 ManipSimulator::ManipSimulator(const char fname[])
 {
 	base_x = -8;
-	base_y = 1.6;
+	base_y = 3.5;
     m_positions.push_back(base_x);
     m_positions.push_back(base_y);
 

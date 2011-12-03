@@ -6,7 +6,7 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     m_manipSimulator = manipSimulator;   
     
     //initialize maxmimum imaging depth of our OCT probe
-    MAX_OCT_DEPTH = 1.5;
+    MAX_OCT_DEPTH = 2;
     
     //initialize angle bandwidth of OCT probe
     ANGLE_BANDWIDTH = 1.0/36 * M_PI;       //have a sensitivity of +/- 5 deg
@@ -26,8 +26,11 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     
     //initialize repulsive force parameters
     alpha = 1;
-    gamma = 10;
-    Q = 2;
+    gamma = 5;
+    Q = 1;
+    
+    //initialize attractive force parameters
+    beta = 10;
     
     //intialize other vars
     sensedPoints.clear();
@@ -43,9 +46,15 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
     //always get OCT data
     OCTData oct = ScanOCT();
     
+    //always update retraction coefficient
+    retractionCoeff = m_manipSimulator->GetCurrentLink();
+    cout << "retraction coeff: " << retractionCoeff << endl;
+    
     switch(stage)
     {
+        //STAGE 0: MOVEMENT INTO THE COCHLEA
         case 0:
+        {
             //IF WE'RE IN STAGE 0, JUST MOVE FORWARD UNTIL WE SENSE SOMETHING IN FRONT OF US
             //check to see if something in front of us
             for(int i=0; i<oct.NrScans; i++)
@@ -66,20 +75,90 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
             //okay nothing in front of us
             //keep moving in the +x direction
             deltaTheta = 0;
-            baseDeltaX = 0.01;
+            baseDeltaX = 0.03;
             baseDeltaY = 0;
             break;
+        }
 
-       // case 1:
+        //STAGE 1: BENDING AROUND THE COCHLEA
+        case 1:
+        {
             //AT STAGE 1, WE HAVE SENSED TISSUE IN FRONT OF US, BUT HAVE NOT
             //STARTED TO BEND THE PROBE YET.
             
-        //    break;
-        
+            baseDeltaX = 0;
+            baseDeltaY = 0;
+            deltaTheta = 0;
+            
+            //we've sensed some obstacles in our trajectory so far.
+            //let's use them to build a repulsive potential field
+            int L = m_manipSimulator->GetNrLinks();
+            for (int i=0; i<L; i++)
+            {
+                double* csf = RepulsiveCSFAtLink(i);
+                
+                //the first two values of csf are going to be added to delta x, y
+                baseDeltaX += csf[0];
+                baseDeltaY += csf[1];
+                
+                //the delta theta should be the sum of all the other thetas
+                for(int k=2; k<L+2; k++)
+                {
+                    deltaTheta += csf[k];
+                }
+            }
+            
+            //now get the attractive force and add it on
+            double* csf = WSF2CSF(AttractiveForceToGoal(), L-1);
+            
+            //the first two values of csf are going to be added to delta x, y
+            baseDeltaX += csf[0];
+            baseDeltaY += csf[1];
+            
+            //the delta theta should be the sum of all the other thetas
+            for(int k=2; k<L+2; k++)
+            {
+                deltaTheta += csf[k];
+            }
+            
+            
+            while(abs(baseDeltaX) > 0.1)
+            {
+                baseDeltaX /= 2;
+                baseDeltaY /= 2;
+            }
+            while(abs(baseDeltaY) > 0.1)
+            {
+                baseDeltaX /= 2;
+                baseDeltaY /= 2;
+            }
+            while(abs(deltaTheta) > 0.05)
+            {
+                deltaTheta /= 2;
+            }
+            
+         //   deltaTheta *= -1;
+            
+            
+            cout << "DX: " << baseDeltaX << "  DY: " << baseDeltaY << "  DTH: " << deltaTheta << endl;
+           // sleep(2);
+            
+            if(baseDeltaX == 0 && baseDeltaY == 0 && deltaTheta == 0)
+                stage = 0;
+            break;
+        }
+            
+        //STAGE 2: STUCK IN A LOCAL MINIMUM INSIDE THE COCHLEA
+        case 2:
+            
+            
+            break;
         default:
+        {
             deltaTheta = m_manipSimulator->GetLinkThetaLimit(0) / 75;
             baseDeltaX = 0.015;
             break;
+        }
     }
 }
 
@@ -136,7 +215,7 @@ Point ManipPlanner::GetElectrodeTip(void)
  */
 bool ManipPlanner::CanLinkBend(int i)
 {
-    return retractionCoeff == m_manipSimulator->GetNrLinks() - i;
+    return retractionCoeff == m_manipSimulator->GetNrLinks() - i - 1;
 }
 
 /**
@@ -189,7 +268,7 @@ OCTData ManipPlanner::ScanOCT(void)
             //angle w.r.t. our link
             double phi = GetAngleToPoint(p) - GetAngleFromXAxis(m_manipSimulator->GetNrLinks()-1);
                         
-            if(fabs(phi) < ANGLE_BANDWIDTH || fabs(phi-0.5*M_PI) < ANGLE_BANDWIDTH || fabs(phi+0.5*M_PI) < ANGLE_BANDWIDTH)  //it's directy in front of us OR orthogonal to our link
+            if(fabs(phi) < ANGLE_BANDWIDTH || fabs(phi-0.5*M_PI) < ANGLE_BANDWIDTH || fabs(phi-1.5*M_PI) < ANGLE_BANDWIDTH || fabs(phi+0.5*M_PI) < ANGLE_BANDWIDTH)  //it's directy in front of us OR orthogonal to our link
             {
                 //add it to the OCTData
                 data.NrScans++;
@@ -207,8 +286,11 @@ OCTData ManipPlanner::ScanOCT(void)
                 //add to sensedPoints for debugging
                 sensedPoints.push_back(i);
                 
-                //add to our sensedObstacles data, to build our potential field
-                sensedObstacles[i] = true;
+                if(stage > 0)
+                {
+                    //add to our sensedObstacles data, to build our potential field
+                    sensedObstacles[i] = true;
+                }
             }
         }
     }
@@ -266,6 +348,13 @@ double* ManipPlanner::RepulsiveCSFAtLink(int j)
     
     for(int i=0; i<O; i++)
     {
+        //we can only get force from this obstacle if we've detected it 
+        //before
+        if(sensedObstacles[i] == false)
+        {
+            //we have not encountered it before
+            continue;
+        }
         //get the force acting on link j from obstacle i
         Point force = RepulsiveForceAtPointFromObstacle(px, py, i);
         
@@ -276,7 +365,7 @@ double* ManipPlanner::RepulsiveCSFAtLink(int j)
         //add to the total force
         for(int k=0; k<N+2; k++)
         {
-            totalCSF[k] += csfI[k];
+            totalCSF[k] -= csfI[k];
         }
     }
     
@@ -357,8 +446,8 @@ double* ManipPlanner::WSF2CSF(Point force, int j)
         double px = m_manipSimulator->GetLinkStartX(i-2);
         double py = m_manipSimulator->GetLinkStartY(i-2);
         
-        jacX[i] = (-1*jy+py)*CanLinkBend(i-2);
-        jacY[i] = (jx-px)*CanLinkBend(i-2);
+        jacX[i] = (-1*jy+py) * CanLinkBend(i-2);
+        jacY[i] = (jx-px) *CanLinkBend(i-2);
     }
     
     //now, calculate the CSF from the WST
@@ -375,5 +464,21 @@ double* ManipPlanner::WSF2CSF(Point force, int j)
     }
     
     return csf;
+}
+
+Point ManipPlanner::AttractiveForceToGoal()
+{
+    //parameters
+    //beta is the scaling factor for the attractive force
+
+    //we call this "LEAD BY CARROT" method, wherein the electrode
+    //always moves forward in the direction of the last link
+    Point v;
+    
+    double theta = GetAngleFromXAxis(m_manipSimulator->GetNrLinks()-1);
+    v.m_x = beta * cos(theta);
+    v.m_y = beta * sin(theta);
+
+    return v;
 }
 
