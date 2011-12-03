@@ -70,7 +70,8 @@ protected:
     
     //potential field functions
     Point RepulsiveForceAtPointFromObstacle(double, double, int);
-    Point AttractiveForceToGoal();
+    Point AttractiveForceStraightAhead();
+    Point AttractiveForceRight();
     double* WSF2CSF(Point force, int j);
     double* RepulsiveCSFAtLink(int j);
     
