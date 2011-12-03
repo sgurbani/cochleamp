@@ -48,11 +48,15 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
     
     //always update retraction coefficient
     retractionCoeff = m_manipSimulator->GetCurrentLink();
-    
-    if(retractionCoeff == -1 && stage != 3)
+        
+    if(retractionCoeff == -1)   //FULLY BENT
     {
-        stage = 3;
-        beta *= 2;
+        //STOP
+        sleep(2);
+        deltaTheta = 0;
+        baseDeltaY = 0;
+        baseDeltaX = 0;
+        return;
     }
     
     switch(stage)
@@ -160,13 +164,7 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
             
             break;
         }
-        //STAGE 3: ELECTRODE IS FULLY BENT, WE CAN WIGGLE A BIT IF WE WANT
-        case 3:
-        {
             
-            
-            break;
-        }
         default:
         {
             deltaTheta = m_manipSimulator->GetLinkThetaLimit(0) / 75;
