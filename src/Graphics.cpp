@@ -172,7 +172,7 @@ void Graphics::HandleEventOnDisplay(void)
                      1*m_planner->m_manipSimulator->GetObstacleRadius(i));
     }
     
-//draw goal and obstacles
+//draw obstacles
 
     //glColor3f(0, 1, 0);
    // DrawCircle2D(m_planner->m_manipSimulator->GetGoalCenterX(), m_planner->m_manipSimulator->GetGoalCenterY(), m_planner->m_manipSimulator->GetGoalRadius());
