@@ -48,9 +48,12 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
     
     //always update retraction coefficient
     retractionCoeff = m_manipSimulator->GetCurrentLink();
-
-    if(retractionCoeff == -1)
+    
+    if(retractionCoeff == -1 && stage != 3)
+    {
         stage = 3;
+        beta *= 2;
+    }
     
     switch(stage)
     {
@@ -111,7 +114,7 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
             }
             
             //now get the attractive force and add it on
-            double* csf = WSF2CSF(AttractiveForceStraightAhead(), L-1);
+            double* csf = WSF2CSF(AttractiveForce(), L-1);
             
             //the first two values of csf are going to be added to delta x, y
             baseDeltaX += csf[0];
@@ -150,69 +153,17 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
             break;
         }
             
-        //STAGE 2: STUCK IN A LOCAL MINIMUM INSIDE THE COCHLEA
+        //STAGE 2: STUCK IN A LOCAL MINIMUM INSIDE THE COCHLEA, BUT IS NOT
+        //          YET FULLY BENT
         case 2:
+        {
             
-             
             break;
-            
-        //STAGE 3: ELECTRODE IS FULLY BENT, JUST NEEDS TO MOVE TO INNER WALL
+        }
+        //STAGE 3: ELECTRODE IS FULLY BENT, WE CAN WIGGLE A BIT IF WE WANT
         case 3:
         {
-            //in this case, we move the attractive force to the inner wall
-            //in what we call "lead by carrot on right side" method.
-            //bascally, take attractive force and rotate it by -PI/2
             
-            baseDeltaX = 0;
-            baseDeltaY = 0;
-            deltaTheta = 0;
-            
-            //we've sensed some obstacles in our trajectory so far.
-            //let's use them to build a repulsive potential field
-            int L = m_manipSimulator->GetNrLinks();
-            for (int i=0; i<L; i++)
-            {
-                double* csf = RepulsiveCSFAtLink(i);
-                
-                //the first two values of csf are going to be added to delta x, y
-                baseDeltaX += csf[0];
-                baseDeltaY += csf[1];
-                
-                //the delta theta should be the sum of all the other thetas
-                for(int k=2; k<L+2; k++)
-                {
-                    deltaTheta += csf[k];
-                }
-            }
-            
-            //now get the attractive force and add it on
-            double* csf = WSF2CSF(AttractiveForceRight(), L-1);
-            
-            //the first two values of csf are going to be added to delta x, y
-            baseDeltaX += csf[0];
-            baseDeltaY += csf[1];
-            
-            //the delta theta should be the sum of all the other thetas
-            for(int k=2; k<L+2; k++)
-            {
-                deltaTheta += csf[k];
-            }
-            
-            
-            while(abs(baseDeltaX) > 0.05)
-            {
-                baseDeltaX /= 2;
-                baseDeltaY /= 2;
-            }
-            while(abs(baseDeltaY) > 0.05)
-            {
-                baseDeltaX /= 2;
-                baseDeltaY /= 2;
-            }
-            while(abs(deltaTheta) > 0.03)
-            {
-                deltaTheta /= 2;
-            }
             
             break;
         }
@@ -529,7 +480,16 @@ double* ManipPlanner::WSF2CSF(Point force, int j)
     return csf;
 }
 
-Point ManipPlanner::AttractiveForceStraightAhead()
+/**
+ * This function calculates the attractive force on the electrode tip.
+ * Since we do not have any idea of the "goal" in a real-life scenario,
+ * we use what we call the "lead by carrot" method. In this case, the
+ * electrode is propelled forward parallel to the angle of the last
+ * link (furthest from the base) of the electrode.
+ *
+ * @return: a Point representing the force vector
+ */
+Point ManipPlanner::AttractiveForce()
 {
     //parameters
     //beta is the scaling factor for the attractive force
@@ -544,22 +504,3 @@ Point ManipPlanner::AttractiveForceStraightAhead()
 
     return v;
 }
-
-Point ManipPlanner::AttractiveForceRight()
-{
-    //parameters
-    //beta is the scaling factor for the attractive force
-    
-    //we call this "LEAD BY CARROT TO THE RIGHT" method, wherein the electrode
-    //is attracted 90* to teh right of the front
-    Point v;
-    
-    double theta = GetAngleFromXAxis(m_manipSimulator->GetNrLinks()-1);
-    theta -= 0.5*M_PI;
-    
-    v.m_x = beta * cos(theta);
-    v.m_y = beta * sin(theta);
-    
-    return v;
-}
-
