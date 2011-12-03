@@ -175,7 +175,6 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
                 deltaTheta /= 2;
             }
             
-            cout << baseDeltaX << ", " << baseDeltaY << ", " << deltaTheta << endl;
             //check to see if we're out of the cochlea (shouldn't happen, but
             //you never know).
             if(baseDeltaX == 0 && baseDeltaY == 0 && deltaTheta == 0)
