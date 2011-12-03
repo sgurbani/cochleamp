@@ -53,20 +53,26 @@ protected:
     ManipSimulator  *m_manipSimulator;
     int retractionCoeff;
     
+    //helper functions
     double GetAngleToPoint(Point p);
     Point GetElectrodeTip(void);
     bool CanLinkBend(int i);
-    
     double DistanceBetweenPoints(Point, Point);
-    
     double GetAngleFromXAxis(const int i);
+    void CollisionChecker();    
     
+    //internal variables for scanning OCT, detecting obstacles, etc
     OCTData ScanOCT(void);
-
     vector<int> sensedPoints;
+    vector<bool> sensedObstacles;
+    
+    //cochlear wall "scraping" checker variables
+    vector<bool> scrapedObstacles;
+    int totalCellsDamaged;
+    
+    //OCT Parameters
     double MAX_OCT_DEPTH;
     double ANGLE_BANDWIDTH;
-    vector<bool> sensedObstacles;
     
     //potential field functions
     Point RepulsiveForceAtPointFromObstacle(double, double, int);
@@ -82,7 +88,11 @@ protected:
     
     //local minimum params
     
+    //algorithm stage param
     int stage;
+    
+    //end game variables
+    bool displayedMessage;
     
     friend class Graphics;
 };

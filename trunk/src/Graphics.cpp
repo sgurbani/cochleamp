@@ -159,10 +159,23 @@ void Graphics::HandleEventOnDisplay(void)
 	DrawCircle2D(m_planner->m_manipSimulator->GetLinkStartX(j), m_planner->m_manipSimulator->GetLinkStartY(j), 0.15);
    
     
+    //display the collision points
+    glColor3f(0,1,0);
+    for(int j=0; j<m_planner->scrapedObstacles.size(); j++)
+    {
+        if(m_planner->scrapedObstacles[j] == false)
+            continue;
+        
+        int i = j;
+        DrawCircle2D(m_planner->m_manipSimulator->GetObstacleCenterX(i), 
+                     m_planner->m_manipSimulator->GetObstacleCenterY(i), 
+                     1*m_planner->m_manipSimulator->GetObstacleRadius(i));
+    }
+    
 //draw goal and obstacles
 
-    glColor3f(0, 1, 0);
-    DrawCircle2D(m_planner->m_manipSimulator->GetGoalCenterX(), m_planner->m_manipSimulator->GetGoalCenterY(), m_planner->m_manipSimulator->GetGoalRadius());
+    //glColor3f(0, 1, 0);
+   // DrawCircle2D(m_planner->m_manipSimulator->GetGoalCenterX(), m_planner->m_manipSimulator->GetGoalCenterY(), m_planner->m_manipSimulator->GetGoalRadius());
     glColor3f(0, 0, 1);
     for(int i = 0; i < m_planner->m_manipSimulator->GetNrObstacles(); ++i)
 	DrawCircle2D(m_planner->m_manipSimulator->GetObstacleCenterX(i), 
@@ -174,7 +187,7 @@ void Graphics::HandleEventOnDisplay(void)
     glColor3f(1, 1, 0);
     DrawCircle2D(m_planner->GetElectrodeTip().m_x, 
                  m_planner->GetElectrodeTip().m_y, 
-                 3*m_planner->m_manipSimulator->GetObstacleRadius(100));
+                 2*m_planner->m_manipSimulator->GetObstacleRadius(100));
     
     //display the currently sensed OCT points
     glColor3f(1,0,0);
