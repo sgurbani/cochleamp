@@ -70,11 +70,18 @@ protected:
     
     //potential field functions
     Point RepulsiveForceAtPointFromObstacle(double, double, int);
+    Point AttractiveForceToGoal();
     double* WSF2CSF(Point force, int j);
     double* RepulsiveCSFAtLink(int j);
     
     //repulsive force constants
     double alpha, gamma, Q;
+    
+    //attractive force constants
+    double beta;
+    
+    //local minimum params
+    
     int stage;
     
     friend class Graphics;
