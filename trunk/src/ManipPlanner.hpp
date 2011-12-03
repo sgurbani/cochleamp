@@ -68,6 +68,13 @@ protected:
     double ANGLE_BANDWIDTH;
     vector<bool> sensedObstacles;
     
+    //potential field functions
+    Point RepulsiveForceAtPointFromObstacle(double, double, int);
+    double* WSF2CSF(Point force, int j);
+    double* RepulsiveCSFAtLink(int j);
+    
+    //repulsive force constants
+    double alpha, gamma, Q;
     int stage;
     
     friend class Graphics;

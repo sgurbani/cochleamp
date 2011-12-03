@@ -37,6 +37,11 @@ public:
     }
 
     /**
+     *@brief Returns closest point on the i-th circle obstacle to point [x, y]
+     */
+    Point ClosestPointOnObstacle(const int i, const double x, const double y);
+    
+    /**
      *@brief Returns closest point on the i-th circle obstacle to point [x, y] if the closest point
      *       is at distance <= dist
      */
@@ -117,11 +122,6 @@ protected:
     {
 	m_joints[i] += dtheta;
     }
-    
-    /**
-     *@brief Returns closest point on the i-th circle obstacle to point [x, y]
-     */
-    Point ClosestPointOnObstacle(const int i, const double x, const double y);
 
     void AddToLinkTheta(const double dtheta);
 
