@@ -46,9 +46,15 @@ ManipPlanner::~ManipPlanner(void)
     //do not delete m_simulator  
 }
 
+/**
+ * This is the main function (and only public function in the class) which run our
+ * algorithm for determining how to move the cochlea.
+ * 
+ * @return: Three values: the change in angle (which accounts for the DoF of the
+ *          retraction coeff and base rotation) and the translational changes.
+ */
 void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, double &baseDeltaY)
 {
-
     //check if we're done
     if(retractionCoeff == -1)   //FULLY BENT, we're done
     {
@@ -65,7 +71,8 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
         {
             //display total damage done
             cout << "ELECTRODE INSERTED." << endl;
-            cout << "TOTAL CELLS DAMAGED: " << totalCellsDamaged << " " << endl << endl;
+            cout << "TOTAL CELLS DAMAGED: " << totalCellsDamaged << " " << endl;
+            printf("PERCENT OF CELLS DAMAGED: %.2f%%\n\n", 100.0 * totalCellsDamaged / m_manipSimulator->GetNrObstacles());
             displayedMessage = true;
         }
         return;
@@ -350,12 +357,17 @@ double ManipPlanner::GetAngleFromXAxis(const int j)
 }
 
 
-
+/**
+ * This function calculates the configuration space force at link j.
+ */
 double* ManipPlanner::RepulsiveCSFAtLink(int j)
 {
     //get the endpoints of link j
     double px = m_manipSimulator->GetLinkEndX(j);
     double py = m_manipSimulator->GetLinkEndY(j);
+    Point p;
+    p.m_x = px;
+    p.m_y = py;
     
     //get the number of links
     int N = m_manipSimulator->GetNrLinks();
@@ -382,7 +394,7 @@ double* ManipPlanner::RepulsiveCSFAtLink(int j)
             continue;
         }
         //get the force acting on link j from obstacle i
-        Point force = RepulsiveForceAtPointFromObstacle(px, py, i);
+        Point force = RepulsiveForceAtPointFromObstacle(p, i);
         
         //convert the workspace force into a cspace force
         //IMPLEMENT THIS
@@ -398,10 +410,17 @@ double* ManipPlanner::RepulsiveCSFAtLink(int j)
     return totalCSF;
 }
 
-
-Point ManipPlanner::RepulsiveForceAtPointFromObstacle(double x, double y, int i)
+/**
+ * This function calculates the repuslive force a point (x,y) feels from obstacle
+ * i. It returns a Point variable with the force.
+ */
+Point ManipPlanner::RepulsiveForceAtPointFromObstacle(Point p, int i)
 {
-    //calculate the repulsive force to point px,py from obstacle i
+    //calculate the repulsive force to point p from obstacle i
+    
+    //get coordinates of Point p
+    double x = p.m_x;
+    double y = p.m_y;
     
     //get the obstacle closest point
     double ox = m_manipSimulator->ClosestPointOnObstacle(i, x, y).m_x;
@@ -441,6 +460,10 @@ Point ManipPlanner::RepulsiveForceAtPointFromObstacle(double x, double y, int i)
     return force;
 }
 
+/**
+ * This function converts the workspace force (given by Point force) for link
+ * j into a config space force and returns that.
+ */
 double* ManipPlanner::WSF2CSF(Point force, int j)
 {
     //get the number of links
