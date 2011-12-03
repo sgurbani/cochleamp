@@ -75,7 +75,7 @@ protected:
     double ANGLE_BANDWIDTH;
     
     //potential field functions
-    Point RepulsiveForceAtPointFromObstacle(double, double, int);
+    Point RepulsiveForceAtPointFromObstacle(Point, int);
     Point AttractiveForce();
     double* WSF2CSF(Point force, int j);
     double* RepulsiveCSFAtLink(int j);
