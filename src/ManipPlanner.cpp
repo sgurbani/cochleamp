@@ -15,10 +15,14 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     retractionCoeff = 0;
     
     //initialize sensedObstacles, which lets us build our potential field
+    //and scrapedObstacles, which represents which "cells" we've hit
     sensedObstacles.clear();
+    scrapedObstacles.clear();
+    totalCellsDamaged = 0;
     for(int i=0; i<m_manipSimulator->GetNrObstacles(); i++)
     {
         sensedObstacles.push_back(false);
+        scrapedObstacles.push_back(false);
     }
     
     //initialize our algorithm to stage 0
@@ -34,6 +38,7 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     
     //intialize other vars
     sensedPoints.clear();
+    displayedMessage = false;
 }
 
 ManipPlanner::~ManipPlanner(void)
@@ -43,21 +48,38 @@ ManipPlanner::~ManipPlanner(void)
 
 void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, double &baseDeltaY)
 {
-    //always get OCT data
-    OCTData oct = ScanOCT();
-    
-    //always update retraction coefficient
-    retractionCoeff = m_manipSimulator->GetCurrentLink();
-        
-    if(retractionCoeff == -1)   //FULLY BENT
+
+    //check if we're done
+    if(retractionCoeff == -1)   //FULLY BENT, we're done
     {
         //STOP
-        sleep(2);
+        stage = -1;         //so that we stop scanning the OCT and collision checker
         deltaTheta = 0;
         baseDeltaY = 0;
         baseDeltaX = 0;
+        
+        //clear OCT sensed points from graphics
+        sensedPoints.clear();
+        
+        if(!displayedMessage)
+        {
+            //display total damage done
+            cout << "ELECTRODE INSERTED." << endl;
+            cout << "TOTAL CELLS DAMAGED: " << totalCellsDamaged << " " << endl << endl;
+            displayedMessage = true;
+        }
         return;
     }
+    
+    //get OCT data and update cochlea display with "OCT sensing"
+    OCTData oct = ScanOCT();
+
+    //check for "scraping" the cochlear walls
+    CollisionChecker();
+    
+    //update retraction coefficient
+    retractionCoeff = m_manipSimulator->GetCurrentLink();
+    
     
     switch(stage)
     {
@@ -145,12 +167,6 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
             {
                 deltaTheta /= 2;
             }
-            
-         //   deltaTheta *= -1;
-            
-            
-            cout << "DX: " << baseDeltaX << "  DY: " << baseDeltaY << "  DTH: " << deltaTheta << endl;
-           // sleep(2);
             
             if(baseDeltaX == 0 && baseDeltaY == 0 && deltaTheta == 0)
                 stage = 0;
@@ -268,6 +284,7 @@ OCTData ManipPlanner::ScanOCT(void)
         //find the closest point to this obstacle, incorporating OCT depth
         Point p = m_manipSimulator->ClosestPointOnObstacleAtMaxDist(i, ex, ey, MAX_OCT_DEPTH);
         
+        
         //check to see if it's within our sensing depth
         if(p.m_x < 0.5*HUGE_VAL && p.m_y < 0.5*HUGE_VAL)
         {
@@ -297,12 +314,9 @@ OCTData ManipPlanner::ScanOCT(void)
                 
                 //add to sensedPoints for debugging
                 sensedPoints.push_back(i);
-                
-                if(stage > 0)
-                {
-                    //add to our sensedObstacles data, to build our potential field
-                    sensedObstacles[i] = true;
-                }
+
+                //add to our sensedObstacles data, to build our potential field
+                sensedObstacles[i] = true;
             }
         }
     }
@@ -501,4 +515,51 @@ Point ManipPlanner::AttractiveForce()
     v.m_y = beta * sin(theta);
 
     return v;
+}
+
+/**
+ * This function checks to see if the electrode is colliding with any of the
+ * cochlear wall cells. We use this to observe the "damage" we've caused to 
+ * the cochlea during insertion.
+ */
+void ManipPlanner::CollisionChecker()
+{
+    //go through each of the link joints and see if it's in collision with any
+    //of the obstacles
+    
+    //go through all the obstacles and only check ones we haven't collided with
+    //before
+    int O = m_manipSimulator->GetNrObstacles();
+
+    totalCellsDamaged = 0;
+    
+    for(int i=0; i<O; i++)
+    {
+        //if we've already collided before, continue
+        if(scrapedObstacles[i] == true)
+        {
+            totalCellsDamaged++;
+            continue;
+        }
+        
+        //check to see if any of our link points is in collision
+        for(int j=0; j<m_manipSimulator->GetNrLinks(); j++)
+        {
+            double jx = m_manipSimulator->GetLinkStartX(j);
+            double jy = m_manipSimulator->GetLinkStartY(j);
+            
+            Point j;
+            j.m_x = jx;
+            j.m_y = jy;
+            
+            if(DistanceBetweenPoints(j, m_manipSimulator->ClosestPointOnObstacle(i, jx, jy)) < 0.1)
+            {
+                scrapedObstacles[i] = true;
+                totalCellsDamaged++;
+                continue;
+            }
+        }
+        
+    }
+    
 }
