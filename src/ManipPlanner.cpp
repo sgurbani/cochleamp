@@ -24,6 +24,11 @@ ManipPlanner::ManipPlanner(ManipSimulator * const manipSimulator)
     //initialize our algorithm to stage 0
     stage = 0;
     
+    //initialize repulsive force parameters
+    alpha = 1;
+    gamma = 10;
+    Q = 2;
+    
     //intialize other vars
     sensedPoints.clear();
 }
@@ -127,11 +132,11 @@ Point ManipPlanner::GetElectrodeTip(void)
  * Determines whether the i-th link is able to bend based on the
  * value of the retraction coefficient.
  *
- * Return true if retractionCoeff >= NrLinks - i
+ * Return true if retractionCoeff == NrLinks - i
  */
 bool ManipPlanner::CanLinkBend(int i)
 {
-    return retractionCoeff >= m_manipSimulator->GetNrLinks() - i;
+    return retractionCoeff == m_manipSimulator->GetNrLinks() - i;
 }
 
 /**
@@ -235,3 +240,140 @@ double ManipPlanner::GetAngleFromXAxis(const int j)
     
     return angle;
 }
+
+
+
+double* ManipPlanner::RepulsiveCSFAtLink(int j)
+{
+    //get the endpoints of link j
+    double px = m_manipSimulator->GetLinkEndX(j);
+    double py = m_manipSimulator->GetLinkEndY(j);
+    
+    //get the number of links
+    int N = m_manipSimulator->GetNrLinks();
+    
+    //get number of obstacles
+    int O = m_manipSimulator->GetNrObstacles();
+    
+    //initialize config space force variable
+    double* totalCSF = new double[N+2];
+    
+    for(int k=0; k<N+2; k++)
+    {
+        totalCSF[k] = 0;
+    }
+    
+    
+    for(int i=0; i<O; i++)
+    {
+        //get the force acting on link j from obstacle i
+        Point force = RepulsiveForceAtPointFromObstacle(px, py, i);
+        
+        //convert the workspace force into a cspace force
+        //IMPLEMENT THIS
+        double* csfI = WSF2CSF(force, j);
+        
+        //add to the total force
+        for(int k=0; k<N+2; k++)
+        {
+            totalCSF[k] += csfI[k];
+        }
+    }
+    
+    return totalCSF;
+}
+
+
+Point ManipPlanner::RepulsiveForceAtPointFromObstacle(double x, double y, int i)
+{
+    //calculate the repulsive force to point px,py from obstacle i
+    
+    //get the obstacle closest point
+    double ox = m_manipSimulator->ClosestPointOnObstacle(i, x, y).m_x;
+    double oy = m_manipSimulator->ClosestPointOnObstacle(i, x, y).m_y;
+    
+    //get distance to obstacle
+    double d = sqrt(pow(ox-x,2) + pow(oy-y,2));
+    
+    
+    Point force;
+    
+    //Use an exponential repusulsive force gradient (in the workspace), based on
+    //something mentioned by Volpe, et al.
+    //The potential function we choose causes very high gradients near the obstacle,
+    //because of a 1/d^2 term. Additionally, the force decays quite fast so that
+    //the manipulator is not affected far away. We have more granular control because
+    //we are able to tweak the overall force at dist~1 by scaling gamma, and the decay
+    //rate by modifying alpha.
+    //
+    //The gradient I calculate is:
+    //Force = -gamma * exp(-alpha * d) * (1/d^2 + alpha/d) * [pt - obs]
+    //where d is the scalar distance between pt and obstacle
+    //
+    //if d > Q, then force is 0
+    if(d > Q)
+    {
+        force.m_x = 0;
+        force.m_y = 0;
+    }
+    else
+    {
+        double forceScale = -gamma * exp(-alpha * d) * (1/pow(d,2) + alpha/d);
+        force.m_x = (x-ox) * forceScale;
+        force.m_y = (y-oy) * forceScale;
+    }
+    
+    return force;
+}
+
+double* ManipPlanner::WSF2CSF(Point force, int j)
+{
+    //get the number of links
+    int N = m_manipSimulator->GetNrLinks();
+    
+    //get coordinates of the j-th link endpoint
+    double jx = m_manipSimulator->GetLinkEndX(j);
+    double jy = m_manipSimulator->GetLinkEndY(j);
+    
+    //prepare the Jacobian matrix
+    //Jacobian is a 2 x (#links + 2) matrix
+    //use 2 row vectors cuz 2D arrays are not fun :(
+    double* jacX = new double[N+2];
+    double* jacY = new double[N+2];
+    
+    //for the first two columns of the Jac, we are dealing with base parameters
+    jacX[0] = 1;
+    jacX[1] = 0;
+    jacY[0] = 0;
+    jacY[1] = 1;
+    
+    
+    //for the rest of the links, calculate Jacobian using angle approximation
+    //shown in class, times our logic function for whether or not a link can
+    //bend.
+    for(int i=2; i<N+2; i++)
+    {
+        //get start point of (i-2)th joint
+        double px = m_manipSimulator->GetLinkStartX(i-2);
+        double py = m_manipSimulator->GetLinkStartY(i-2);
+        
+        jacX[i] = (-1*jy+py)*CanLinkBend(i-2);
+        jacY[i] = (jx-px)*CanLinkBend(i-2);
+    }
+    
+    //now, calculate the CSF from the WST
+    //csf = jac_transpose * wsf
+    
+    double* csf = new double[N+2];
+    
+    double fx = force.m_x;
+    double fy = force.m_y;
+    
+    for(int i=0; i<N+2; i++)
+    {
+        csf[i] = jacX[i]*fx + jacY[i]*fy;
+    }
+    
+    return csf;
+}
+
