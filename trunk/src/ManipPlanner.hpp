@@ -86,7 +86,6 @@ protected:
     //attractive force constants
     double beta;
     
-    //local minimum params
     
     //algorithm stage param
     int stage;

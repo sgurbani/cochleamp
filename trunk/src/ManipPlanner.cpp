@@ -175,16 +175,38 @@ void ManipPlanner::ConfigurationMove(double &deltaTheta, double &baseDeltaX, dou
                 deltaTheta /= 2;
             }
             
+            cout << baseDeltaX << ", " << baseDeltaY << ", " << deltaTheta << endl;
+            //check to see if we're out of the cochlea (shouldn't happen, but
+            //you never know).
             if(baseDeltaX == 0 && baseDeltaY == 0 && deltaTheta == 0)
                 stage = 0;
             break;
+            
+            //check to see if we're in a local minimum
+            double eps = 0.08;
+            if(abs(baseDeltaX) + abs(baseDeltaY) + abs(deltaTheta) < eps)
+            {
+                //switch to stage 2
+                stage = 2;
+            }
+            
+            
         }
             
         //STAGE 2: STUCK IN A LOCAL MINIMUM INSIDE THE COCHLEA, BUT IS NOT
         //          YET FULLY BENT
         case 2:
         {
+            cout << "IN LOCAL MINIMUM" << endl;
             
+            //increase attractive force
+            beta *= 1.4;
+            
+            //reduce repulsive force
+            alpha *= 0.9;
+            
+            //go back to stage 1
+            stage = 1;
             break;
         }
             
@@ -579,8 +601,16 @@ void ManipPlanner::CollisionChecker()
             {
                 scrapedObstacles[i] = true;
                 totalCellsDamaged++;
-                continue;
+                break;
             }
+        }
+        
+        //check for the electrode tip too
+        Point e = GetElectrodeTip();
+        if(!scrapedObstacles[i] &&  DistanceBetweenPoints(e, m_manipSimulator->ClosestPointOnObstacle(i, e.m_x, e.m_y)) < 0.1)
+        {
+            scrapedObstacles[i] = true;
+            totalCellsDamaged++;
         }
         
     }
